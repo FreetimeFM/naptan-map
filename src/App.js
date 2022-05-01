@@ -3,11 +3,52 @@ import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet'
 
 function App() {
   const [data, setData] = useState([[]]);
+  const [markers, setMarkers] = useState([]);
 
-  // useEffect(() => {
-  //   if (data.length === 0) return;
-  //   getMarkers();
-  // }, [data])
+  useEffect(() => {
+    if (data.length === 0) return;
+
+    const longIndex = data[0].findIndex(value => value === "Longitude");
+    const latIndex = data[0].findIndex(value => value === "Latitude");
+    let tempMarkers = [], avgLong = 0, avgLat = 0;
+
+    if (longIndex === -1 || latIndex === -1) return;
+
+    data.slice(1).forEach((value, index) => {
+
+      const longitude = parseFloat(value[longIndex]);
+      const latitude = parseFloat(value[latIndex]);
+
+      if (longitude === NaN || latitude === NaN) return;
+
+      tempMarkers.push(
+        <Circle key={index} center={[ latitude, longitude ]}>
+          <Popup>
+            {
+              <table>
+                <tbody>
+                {
+                  value.map((item, index2) => {
+                    if (item === "") return null;
+                    return (
+                      <tr key={`${index}.${index2}`}>
+                        <th>{data[0][index2]}</th>
+                        <td>{item}</td>
+                      </tr>
+                    )
+                  })
+                }
+                </tbody>
+              </table>
+            }
+          </Popup>
+        </Circle>
+      )
+
+    });
+
+    setMarkers(tempMarkers);
+  }, [data])
 
 
   function handleSubmit(input) {
@@ -18,49 +59,13 @@ function App() {
     reader.readAsText(input);
   }
 
-  function getMarkers() {
-
-    const longIndex = data[0].findIndex(value => value === "Longitude");
-    const latIndex = data[0].findIndex(value => value === "Latitude");
-
-    if (longIndex === -1 || latIndex === -1) return null;
-
-    return data.map((value, index) => {
-      if (index === 0) return null;
-
-      const longitude = parseFloat(value[longIndex]);
-      const latitude = parseFloat(value[latIndex]);
-
-      if (longitude === NaN || latitude === NaN) return null;
-
-      return <Circle key={index} center={[ latitude, longitude ]}>
-        <Popup>
-          {
-            <table>
-              {
-                value.map((item, index2) => {
-                  if (item === "") return null;
-                  return (
-                    <tr key={`${index}.${index2}`}>
-                      <th>{data[0][index2]}</th>
-                      <td>{item}</td>
-                    </tr>
-                  )
-                })
-              }
-            </table>
-          }
-        </Popup>
-      </Circle>;
-    });
-  }
-
   return (
     <div className="App" style={{ height: "100vh" }}>
       <FileInput onSubmit={handleSubmit} />
       <MapContainer
-        center={[51.505, -0.09]}
-        zoom={13}
+        center={[54.093, -2.894]}
+        zoom={6}
+        minZoom={6}
         scrollWheelZoom
         style={{ height: "100%" }}
       >
@@ -68,7 +73,9 @@ function App() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        { getMarkers() }
+        {
+          markers.length === 0 ? null : markers.map(value => value)
+        }
       </MapContainer>
     </div>
   );
