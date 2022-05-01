@@ -14,6 +14,7 @@ function App() {
   return (
     <div className="App">
       <FileInput onSubmit={handleSubmit} />
+      <DataTable data={data} />
     </div>
   );
 }
@@ -49,6 +50,37 @@ function FileInput({ onSubmit }) {
         Submit
       </button>
     </form>
+  )
+}
+
+/**
+ * Displays the NaPTAN data as a table. Used for debugging purposes.
+ * @param {Array<Array<string>>} data 2D Array of string elements.
+ * @returns HTML table component.
+ */
+function DataTable({ data }) {
+  return (
+    <table>
+      <tr>
+        {
+          data[0].map((value, index) => {
+            return <th key={index}>{value}</th>
+          })
+        }
+      </tr>
+      {
+        data.map((value, index) => {
+          if (index === 1) return null;
+          return <tr key={index}>
+            {
+              value.map((item, index2) => {
+                return <td key={index2}>{item}</td>
+              })
+            }
+          </tr>
+        })
+      }
+    </table>
   )
 }
 
