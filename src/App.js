@@ -61,13 +61,15 @@ function App() {
 
   return (
     <div className="App" style={{ height: "100vh" }}>
-      <FileInput onSubmit={handleSubmit} />
+      <FileInput
+        onSubmit={handleSubmit}
+      />
       <MapContainer
         center={[54.093, -2.894]}
         zoom={6}
         minZoom={6}
-        scrollWheelZoom
         style={{ height: "100%" }}
+        scrollWheelZoom
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -110,6 +112,11 @@ function FileInput({ onSubmit }) {
         disabled={!file}
       >
         Submit
+      </button>
+      <button
+        type="reset"
+      >
+        Reset
       </button>
     </form>
   )
