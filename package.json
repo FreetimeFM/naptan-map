@@ -1,6 +1,6 @@
 {
   "name": "naptan-map",
-  "version": "0.1.0",
+  "description": "Displays NAPTAN data on a map.",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
