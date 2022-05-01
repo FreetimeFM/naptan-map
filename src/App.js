@@ -52,6 +52,12 @@ function App() {
 
 
   function handleSubmit(input) {
+    console.log(input);
+
+    if (input.size > 500000) {
+      if (!window.confirm("This file is big. Prosessing this file might slow down or crash the browser. Are you sure you want to run?")) return;
+    }
+
     const reader = new FileReader();
     reader.onload = event => {
       setData(parseCSV(event.target.result))
