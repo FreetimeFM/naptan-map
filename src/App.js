@@ -10,7 +10,7 @@ function App() {
 
     const longIndex = data[0].findIndex(value => value === "Longitude");
     const latIndex = data[0].findIndex(value => value === "Latitude");
-    let tempMarkers = [], avgLong = 0, avgLat = 0;
+    let tempMarkers = [];
 
     if (longIndex === -1 || latIndex === -1) return;
 
@@ -19,7 +19,7 @@ function App() {
       const longitude = parseFloat(value[longIndex]);
       const latitude = parseFloat(value[latIndex]);
 
-      if (longitude === NaN || latitude === NaN) return;
+      if (Number.isNaN(longitude) || Number.isNaN(latitude)) return;
 
       tempMarkers.push(
         <Circle key={index} center={[ latitude, longitude ]}>
@@ -44,8 +44,11 @@ function App() {
           </Popup>
         </Circle>
       )
-
     });
+
+    if (tempMarkers.length === 0) {
+      window.alert("It seems like the file doesn't have Latitude/Longitude coordinates. Please try a different file.")
+    }
 
     setMarkers(tempMarkers);
   }, [data])
