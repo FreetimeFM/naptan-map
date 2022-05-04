@@ -132,37 +132,6 @@ function FileInput({ onSubmit }) {
 }
 
 /**
- * Displays the NaPTAN data as a table. Used for debugging purposes.
- * @param {Array<Array<string>>} data 2D Array of string elements.
- * @returns HTML table component.
- */
-function DataTable({ data }) {
-  return (
-    <table>
-      <tr>
-        {
-          data[0].map((value, index) => {
-            return <th key={index}>{value}</th>
-          })
-        }
-      </tr>
-      {
-        data.map((value, index) => {
-          if (index === 0) return null;
-          return <tr key={index}>
-            {
-              value.map((item, index2) => {
-                return <td key={index2}>{item}</td>
-              })
-            }
-          </tr>
-        })
-      }
-    </table>
-  )
-}
-
-/**
  * Converts the CSV data into an array.
  * Taken from https://stackoverflow.com/a/14991797.
  * @param {String} str The input data.
