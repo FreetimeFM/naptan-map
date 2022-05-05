@@ -1,35 +1,62 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Circle, Popup, ScaleControl, ZoomControl } from 'react-leaflet'
+import osgridref from "geodesy/osgridref";
 
 function App() {
-  const [data, setData] = useState([[]]);
+  const [data, setData] = useState();
   const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
-    if (data.length === 0) return;
+    if (!data) return;
 
+    // Gets the indexes of the eastings/northings and longitude/latitude and status of stop.
+    const eastIndex = data[0].findIndex(value => value === "Easting");
+    const northIndex = data[0].findIndex(value => value === "Northing");
     const longIndex = data[0].findIndex(value => value === "Longitude");
     const latIndex = data[0].findIndex(value => value === "Latitude");
+    const statusIndex = data[0].findIndex(value => value === "Status");
     let tempMarkers = [];
 
-    if (longIndex === -1 || latIndex === -1) return;
+    // Checks if indexes of the eastings/northings and longitude/latitude exist.
+    if (!((eastIndex !== -1 && northIndex !== -1) || (longIndex !== -1 && latIndex !== -1))) {
+      console.error("The file contains improper Eastings/Northings or Longitude/Latitude.");
+      alert("The file contains improper Eastings/Northings or Longitude/Latitude.");
+    }
 
+    // For each row in data.
     data.slice(1).forEach((value, index) => {
 
-      const longitude = parseFloat(value[longIndex]);
-      const latitude = parseFloat(value[latIndex]);
+      let longitude = NaN, latitude = NaN;
 
-      if (Number.isNaN(longitude) || Number.isNaN(latitude)) return;
+      // If LatLon exists, get coords.
+      if (value[longIndex] !== "" && value[latIndex] !== "") {
+        longitude = parseFloat(value[longIndex]);
+        latitude = parseFloat(value[latIndex]);
 
+      // If Eastings/Northings exists, convert osgridref coords to latlon using Geodesy library.
+      } else if (value[eastIndex] !== "" && value[northIndex] !== "") {
+        const converted = new osgridref(parseFloat(value[eastIndex]), parseFloat(value[northIndex])).toLatLon();
+        longitude = converted.longitude;
+        latitude = converted.latitude;
+      }
+
+      // If extraction or conversion of coords was successful.
+      if (isNaN(longitude) || isNaN(latitude)) return;
+
+      // Creates circle map marker and adds to array of map markers. Contains popup that display extra information on click.
       tempMarkers.push(
-        <Circle key={index} center={[ latitude, longitude ]}>
+        <Circle
+          key={index}
+          center={[ latitude, longitude ]}
+          color={ value[statusIndex] === "active" ? "blue" : "orange" } // Display different colour for inactive stops.
+        >
           <Popup>
             {
               <table>
                 <tbody>
                 {
                   value.map((item, index2) => {
-                    if (item === "") return null;
+                    if (item === "") return null; // If row item has empty value, don't show.
                     return (
                       <tr key={`${index}.${index2}`}>
                         <th>{data[0][index2]}</th>
@@ -46,21 +73,23 @@ function App() {
       )
     });
 
+    // If no markers were created, something must be wrong with the coordinate data in the file.
     if (tempMarkers.length === 0) {
-      window.alert("It seems like the file doesn't have Latitude/Longitude coordinates. Please try a different file.")
+      window.alert("It seems like the file doesn't have Easting/Northing or Latitude/Longitude coordinates. Please try a different file.")
     }
 
     setMarkers(tempMarkers);
   }, [data])
 
 
+  // Checks and stores file data.
   function handleSubmit(input) {
     console.log(input);
 
-    if (input.size > 500000) {
-      if (!window.confirm("This file is big. Prosessing this file might slow down or crash the browser. Are you sure you want to run?")) return;
-    }
+    // If file is big, confirm if user still wants to use file.
+    if (input.size > 500000) if (!window.confirm("This file is big. Prosessing this file might slow down or crash the browser. Are you sure you want to run?")) return;
 
+    // Parse file and store data.
     const reader = new FileReader();
     reader.onload = event => {
       setData(parseCSV(event.target.result))
@@ -68,16 +97,25 @@ function App() {
     reader.readAsText(input);
   }
 
+  // Prompts user to clear the map and clears data.
+  function handleReset() {
+    if (!data) return;
+    if (!window.confirm("Are you sure you want to clear the map?")) return;
+
+    setData();
+    setMarkers([]);
+  }
+
+  // Displays the map with Open Street Map layer.
   return (
     <div className="App" style={{ height: "100vh" }}>
-      <FileInput
-        onSubmit={handleSubmit}
-      />
       <MapContainer
-        center={[54.093, -2.894]}
+        center={[55.8, -2.894]}
         zoom={6}
         minZoom={6}
         style={{ height: "100%" }}
+        zoomControl={false}
+        doubleClickZoom={false}
         scrollWheelZoom
       >
         <TileLayer
@@ -87,14 +125,25 @@ function App() {
         {
           markers.length === 0 ? null : markers.map(value => value)
         }
+        <div className="leaflet-top leaflet-left">
+          <div className="leaflet-control leaflet-bar">
+            <FileInput onSubmit={handleSubmit} onReset={handleReset} />
+          </div>
+        </div>
+        <ZoomControl position="bottomleft" />
+        <ScaleControl />
       </MapContainer>
     </div>
   );
 }
 
-function FileInput({ onSubmit }) {
+/**
+ * Displays form prompting the user to input file.
+ */
+function FileInput({ onSubmit, onReset }) {
   const [file, setFile] = useState();
 
+  // Checks if file has been attached before sending to parent.
   function handleSubmit(e) {
     e.preventDefault();
 
@@ -106,8 +155,13 @@ function FileInput({ onSubmit }) {
     onSubmit(file);
   }
 
+  function handleReset(_e) {
+    setFile();
+    onReset();
+  }
+
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} onReset={handleReset}>
       <input
         type="file"
         name="fileInput"
@@ -125,40 +179,9 @@ function FileInput({ onSubmit }) {
       <button
         type="reset"
       >
-        Reset
+        Clear Map
       </button>
     </form>
-  )
-}
-
-/**
- * Displays the NaPTAN data as a table. Used for debugging purposes.
- * @param {Array<Array<string>>} data 2D Array of string elements.
- * @returns HTML table component.
- */
-function DataTable({ data }) {
-  return (
-    <table>
-      <tr>
-        {
-          data[0].map((value, index) => {
-            return <th key={index}>{value}</th>
-          })
-        }
-      </tr>
-      {
-        data.map((value, index) => {
-          if (index === 0) return null;
-          return <tr key={index}>
-            {
-              value.map((item, index2) => {
-                return <td key={index2}>{item}</td>
-              })
-            }
-          </tr>
-        })
-      }
-    </table>
   )
 }
 
@@ -181,22 +204,22 @@ function parseCSV(str) {
       // If the current character is a quotation mark, and we're inside a
       // quoted field, and the next character is also a quotation mark,
       // add a quotation mark to the current column and skip the next character
-      if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+      if (cc === '"' && quote && nc === '"') { arr[row][col] += cc; ++c; continue; }
 
       // If it's just one quotation mark, begin/end quoted field
-      if (cc == '"') { quote = !quote; continue; }
+      if (cc === '"') { quote = !quote; continue; }
 
       // If it's a comma and we're not in a quoted field, move on to the next column
-      if (cc == ',' && !quote) { ++col; continue; }
+      if (cc === ',' && !quote) { ++col; continue; }
 
       // If it's a newline (CRLF) and we're not in a quoted field, skip the next character
       // and move on to the next row and move to column 0 of that new row
-      if (cc == '\r' && nc == '\n' && !quote) { ++row; col = 0; ++c; continue; }
+      if (cc === '\r' && nc === '\n' && !quote) { ++row; col = 0; ++c; continue; }
 
       // If it's a newline (LF or CR) and we're not in a quoted field,
       // move on to the next row and move to column 0 of that new row
-      if (cc == '\n' && !quote) { ++row; col = 0; continue; }
-      if (cc == '\r' && !quote) { ++row; col = 0; continue; }
+      if (cc === '\n' && !quote) { ++row; col = 0; continue; }
+      if (cc === '\r' && !quote) { ++row; col = 0; continue; }
 
       // Otherwise, append the current character to the current column
       arr[row][col] += cc;
