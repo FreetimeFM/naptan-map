@@ -82,13 +82,14 @@ function App() {
   }, [data])
 
 
+  // Checks and stores file data.
   function handleSubmit(input) {
     console.log(input);
 
-    if (input.size > 500000) {
-      if (!window.confirm("This file is big. Prosessing this file might slow down or crash the browser. Are you sure you want to run?")) return;
-    }
+    // If file is big, confirm if user still wants to use file.
+    if (input.size > 500000) if (!window.confirm("This file is big. Prosessing this file might slow down or crash the browser. Are you sure you want to run?")) return;
 
+    // Parse file and store data.
     const reader = new FileReader();
     reader.onload = event => {
       setData(parseCSV(event.target.result))
@@ -96,6 +97,7 @@ function App() {
     reader.readAsText(input);
   }
 
+  // Displays the map with Open Street Map layer.
   return (
     <div className="App" style={{ height: "100vh" }}>
       <FileInput
@@ -120,9 +122,13 @@ function App() {
   );
 }
 
+/**
+ * Displays form prompting the user to input file.
+ */
 function FileInput({ onSubmit }) {
   const [file, setFile] = useState();
 
+  // Checks if file has been attached before sending to parent.
   function handleSubmit(e) {
     e.preventDefault();
 
