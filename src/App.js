@@ -97,11 +97,21 @@ function App() {
     reader.readAsText(input);
   }
 
+  // Prompts user to clear the map and clears data.
+  function handleReset() {
+    if (!data) return;
+    if (!window.confirm("Are you sure you want to clear the map?")) return;
+
+    setData();
+    setMarkers([]);
+  }
+
   // Displays the map with Open Street Map layer.
   return (
     <div className="App" style={{ height: "100vh" }}>
       <FileInput
         onSubmit={handleSubmit}
+        onReset={handleReset}
       />
       <MapContainer
         center={[54.093, -2.894]}
@@ -125,7 +135,7 @@ function App() {
 /**
  * Displays form prompting the user to input file.
  */
-function FileInput({ onSubmit }) {
+function FileInput({ onSubmit, onReset }) {
   const [file, setFile] = useState();
 
   // Checks if file has been attached before sending to parent.
@@ -140,8 +150,13 @@ function FileInput({ onSubmit }) {
     onSubmit(file);
   }
 
+  function handleReset(_e) {
+    setFile();
+    onReset();
+  }
+
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} onReset={handleReset}>
       <input
         type="file"
         name="fileInput"
@@ -159,7 +174,7 @@ function FileInput({ onSubmit }) {
       <button
         type="reset"
       >
-        Reset
+        Remove file / Clear Map
       </button>
     </form>
   )
