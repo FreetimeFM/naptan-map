@@ -10,6 +10,7 @@ function App() {
 
     const longIndex = data[0].findIndex(value => value === "Longitude");
     const latIndex = data[0].findIndex(value => value === "Latitude");
+    const statusIndex = data[0].findIndex(value => value === "Status");
     let tempMarkers = [];
 
     if (longIndex === -1 || latIndex === -1) return;
@@ -22,14 +23,18 @@ function App() {
       if (Number.isNaN(longitude) || Number.isNaN(latitude)) return;
 
       tempMarkers.push(
-        <Circle key={index} center={[ latitude, longitude ]}>
+        <Circle
+          key={index}
+          center={[ latitude, longitude ]}
+          color={ value[statusIndex] === "active" ? "blue" : "orange" } // Display different colour for inactive stops.
+        >
           <Popup>
             {
               <table>
                 <tbody>
                 {
                   value.map((item, index2) => {
-                    if (item === "") return null;
+                    if (item === "") return null; // If row item has empty value, don't show.
                     return (
                       <tr key={`${index}.${index2}`}>
                         <th>{data[0][index2]}</th>
