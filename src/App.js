@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Circle, Popup, ScaleControl, ZoomControl } from 'react-leaflet'
 import osgridref from "geodesy/osgridref";
 
 function App() {
@@ -109,15 +109,13 @@ function App() {
   // Displays the map with Open Street Map layer.
   return (
     <div className="App" style={{ height: "100vh" }}>
-      <FileInput
-        onSubmit={handleSubmit}
-        onReset={handleReset}
-      />
       <MapContainer
-        center={[54.093, -2.894]}
+        center={[55.8, -2.894]}
         zoom={6}
         minZoom={6}
         style={{ height: "100%" }}
+        zoomControl={false}
+        doubleClickZoom={false}
         scrollWheelZoom
       >
         <TileLayer
@@ -127,6 +125,13 @@ function App() {
         {
           markers.length === 0 ? null : markers.map(value => value)
         }
+        <div className="leaflet-top leaflet-left">
+          <div className="leaflet-control leaflet-bar">
+            <FileInput onSubmit={handleSubmit} onReset={handleReset} />
+          </div>
+        </div>
+        <ZoomControl position="bottomleft" />
+        <ScaleControl />
       </MapContainer>
     </div>
   );
@@ -174,7 +179,7 @@ function FileInput({ onSubmit, onReset }) {
       <button
         type="reset"
       >
-        Remove file / Clear Map
+        Clear Map
       </button>
     </form>
   )
