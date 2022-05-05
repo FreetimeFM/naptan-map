@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet'
+import osgridref from "geodesy/osgridref";
 
 function App() {
   const [data, setData] = useState();
@@ -8,20 +9,41 @@ function App() {
   useEffect(() => {
     if (!data) return;
 
+    // Gets the indexes of the eastings/northings and longitude/latitude and status of stop.
+    const eastIndex = data[0].findIndex(value => value === "Easting");
+    const northIndex = data[0].findIndex(value => value === "Northing");
     const longIndex = data[0].findIndex(value => value === "Longitude");
     const latIndex = data[0].findIndex(value => value === "Latitude");
     const statusIndex = data[0].findIndex(value => value === "Status");
     let tempMarkers = [];
 
-    if (longIndex === -1 || latIndex === -1) return;
+    // Checks if indexes of the eastings/northings and longitude/latitude exist.
+    if (!((eastIndex !== -1 && northIndex !== -1) || (longIndex !== -1 && latIndex !== -1))) {
+      console.error("The file contains improper Eastings/Northings or Longitude/Latitude.");
+      alert("The file contains improper Eastings/Northings or Longitude/Latitude.");
+    }
 
+    // For each row in data.
     data.slice(1).forEach((value, index) => {
 
-      const longitude = parseFloat(value[longIndex]);
-      const latitude = parseFloat(value[latIndex]);
+      let longitude = NaN, latitude = NaN;
 
-      if (Number.isNaN(longitude) || Number.isNaN(latitude)) return;
+      // If LatLon exists, get coords.
+      if (value[longIndex] !== "" && value[latIndex] !== "") {
+        longitude = parseFloat(value[longIndex]);
+        latitude = parseFloat(value[latIndex]);
 
+      // If Eastings/Northings exists, convert osgridref coords to latlon using Geodesy library.
+      } else if (value[eastIndex] !== "" && value[northIndex] !== "") {
+        const converted = new osgridref(parseFloat(value[eastIndex]), parseFloat(value[northIndex])).toLatLon();
+        longitude = converted.longitude;
+        latitude = converted.latitude;
+      }
+
+      // If extraction or conversion of coords was successful.
+      if (isNaN(longitude) || isNaN(latitude)) return;
+
+      // Creates circle map marker and adds to array of map markers. Contains popup that display extra information on click.
       tempMarkers.push(
         <Circle
           key={index}
@@ -51,8 +73,9 @@ function App() {
       )
     });
 
+    // If no markers were created, something must be wrong with the coordinate data in the file.
     if (tempMarkers.length === 0) {
-      window.alert("It seems like the file doesn't have Latitude/Longitude coordinates. Please try a different file.")
+      window.alert("It seems like the file doesn't have Easting/Northing or Latitude/Longitude coordinates. Please try a different file.")
     }
 
     setMarkers(tempMarkers);
