@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet'
 
 function App() {
-  const [data, setData] = useState([[]]);
+  const [data, setData] = useState();
   const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
-    if (data.length === 0) return;
+    if (!data) return;
 
     const longIndex = data[0].findIndex(value => value === "Longitude");
     const latIndex = data[0].findIndex(value => value === "Latitude");
