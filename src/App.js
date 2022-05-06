@@ -128,6 +128,13 @@ function App() {
         <div className="leaflet-top leaflet-left">
           <div className="leaflet-control leaflet-bar">
             <FileInput onSubmit={handleSubmit} onReset={handleReset} />
+            <button
+              onClick={() => {
+                window.open("https://github.com/FreetimeFM/naptan-map/blob/master/README.md#how-to-use", "_blank")
+              }}
+            >
+              Instructions
+            </button>
           </div>
         </div>
         <ZoomControl position="bottomleft" />
